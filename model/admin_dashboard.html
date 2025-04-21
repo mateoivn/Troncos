@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/jpg" href="images/logotroncos.jpg">
+  <title>Nuestros Productos</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    header {
+      background-color: #f38e30fb;
+      color: white;
+      text-align: left;
+      padding: 20px;
+      font-size: 24px;
+    }
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      padding: 20px;
+    }
+    .producto {
+      background: white;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      border: 1px solid #ccc;
+      display: inline-block;
+      width: 200px;
+      text-align: center;
+    }
+    .producto img {
+      max-width: 100%;
+      height: auto;
+    }
+    footer {
+      text-align: center;
+      padding: 10px;
+      background: #8B5A2B;
+      color: white;
+      position: absolute;
+      width: 100%;
+      bottom: 0;
+    }
+    #guardarBtn {
+      display: none;
+    }
+  </style>
+
+</head>
+
+<body>
+  <header>
+    <a href="index.html"><img src="/images/logotroncos.jpg" alt="logotroncos"></a> Troncos y Algo Más
+    <a href="https://www.instagram.com/troncosyalgomas/"><img src="/images/logoinstagram.png" alt="Instagram" height="100" width="100"></a>
+    <p id="mensajeSesion"></p>
+  </header>
+
+  <h1>Agregar / Editar Producto</h1>
+
+  <form id="formProducto">
+    <label for="nombre">Nombre:</label>
+    <input type="text" id="nombre" required><br><br>
+
+    <label for="descripcion">Descripción:</label>
+    <textarea id="descripcion" required></textarea><br><br>
+
+    <label for="precio">Precio:</label>
+    <input type="text" id="precio" required><br><br>
+
+    <label for="imagen">Imagen:</label>
+    <input type="file" id="imagen"><br><br>
+
+    <button type="submit">Agregar Producto</button>
+    <button type="button" id="guardarBtn">Guardar Cambios</button>
+  </form>
+
+  <h1>Lista de Productos</h1>
+  <div id="productos-container"></div>
+
+  <button id="logoutBtn">Cerrar Sesión</button>
+
+  <footer>
+    &copy; 2025 Troncos y Algo Más - Todos los derechos reservados
+  </footer>
+
+  <script>
+    let productoEditandoId = null;
+
+    async function cargarProductos() {
+    try {
+    const respuesta = await fetch('http://localhost:8090/api/collections/productos/records');
+    const datos = await respuesta.json();
+    const productos = datos.items;
+
+    const contenedor = document.getElementById('productos-container');
+    contenedor.innerHTML = '';
+
+    productos.forEach(producto => {
+      const div = document.createElement('div');
+      div.className = 'producto';
+
+      const urlImagen = producto.imagen 
+        ? `http://localhost:8090/api/files/productos/${producto.id}/${producto.imagen}`
+        : '/images/logotroncos.jpg';
+
+      div.innerHTML = `
+        <img src="${urlImagen}" alt="${producto.nombre}" 
+          onerror="this.onerror=null; this.src='images/imagen-no-disponible.png';">
+        <h2>${producto.nombre}</h2>
+        <p>${producto.descripcion}</p>
+        <p><strong>$${producto.precio}</strong></p>
+        <button onclick="editarProducto('${producto.id}')">Editar</button>
+        <button onclick="eliminarProducto('${producto.id}')">Eliminar</button>
+      `;
+      
+      contenedor.appendChild(div);
+    });
+
+  } catch (error) {
+    console.error('Error cargando productos:', error);
+  }
+}
+
+
+    async function agregarProducto(event) {
+  event.preventDefault();
+
+  const nombre = document.getElementById('nombre').value.trim();
+  const descripcion = document.getElementById('descripcion').value.trim();
+  const precio = document.getElementById('precio').value;
+  const imagen = document.getElementById('imagen').files[0];
+
+  // --- Validación: evitar duplicados ---
+  const respuesta = await fetch('http://localhost:8090/api/collections/productos/records');
+  const datos = await respuesta.json();
+  const productos = datos.items;
+
+  const nombreExistente = productos.some(p => p.nombre.toLowerCase() === nombre.toLowerCase());
+  const descripcionExistente = productos.some(p => p.descripcion.toLowerCase() === descripcion.toLowerCase());
+
+  if (nombreExistente) {
+    alert('Ya existe un producto con el mismo nombre.');
+    return;
+  }
+  if (descripcionExistente) {
+    alert('Ya existe un producto con la misma descripción.');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('nombre', nombre);
+  formData.append('descripcion', descripcion);
+  formData.append('precio', precio);
+  if (imagen) formData.append('imagen', imagen);
+
+  try {
+    const respuestaAgregar = await fetch('http://localhost:8090/api/collections/productos/records', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (respuestaAgregar.ok) {
+      alert('Producto agregado exitosamente');
+      document.getElementById('formProducto').reset();
+      cargarProductos();
+    } else {
+      alert('Error al agregar producto');
+    }
+  } catch (error) {
+    console.error('Error al agregar producto:', error);
+  }
+}
+
+
+    async function editarProducto(id) {
+      try {
+        const respuesta = await fetch(`http://localhost:8090/api/collections/productos/records/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const producto = await respuesta.json();
+
+        document.getElementById('nombre').value = producto.nombre;
+        document.getElementById('descripcion').value = producto.descripcion;
+        document.getElementById('precio').value = producto.precio;
+
+        productoEditandoId = id;
+
+        document.getElementById('guardarBtn').style.display = 'inline-block';
+      } catch (error) {
+        console.error('Error cargando producto para editar:', error);
+      }
+    }
+
+    async function guardarCambios() {
+  if (!productoEditandoId) {
+    alert('No hay producto en edición');
+    return;
+  }
+
+  const nombre = document.getElementById('nombre').value.trim();
+  const descripcion = document.getElementById('descripcion').value.trim();
+  const precio = document.getElementById('precio').value;
+  const imagen = document.getElementById('imagen').files[0];
+
+  // --- Validación: evitar duplicados (excluyendo el producto que estamos editando) ---
+  const respuesta = await fetch('http://localhost:8090/api/collections/productos/records');
+  const datos = await respuesta.json();
+  const productos = datos.items.filter(p => p.id !== productoEditandoId);
+
+  const nombreExistente = productos.some(p => p.nombre.toLowerCase() === nombre.toLowerCase());
+  const descripcionExistente = productos.some(p => p.descripcion.toLowerCase() === descripcion.toLowerCase());
+
+  if (nombreExistente) {
+    alert('Ya existe un producto con el mismo nombre.');
+    return;
+  }
+  if (descripcionExistente) {
+    alert('Ya existe un producto con la misma descripción.');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('nombre', nombre);
+  formData.append('descripcion', descripcion);
+  formData.append('precio', precio);
+  if (imagen) formData.append('imagen', imagen);
+
+  try {
+    const respuestaActualizar = await fetch(`http://localhost:8090/api/collections/productos/records/${productoEditandoId}`, {
+      method: 'PATCH',
+      body: formData,
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (respuestaActualizar.ok) {
+      alert('Producto actualizado con éxito');
+      document.getElementById('formProducto').reset();
+      document.getElementById('guardarBtn').style.display = 'none';
+      productoEditandoId = null;
+      cargarProductos();
+    } else {
+      alert('Error al actualizar producto');
+    }
+  } catch (error) {
+    console.error('Error actualizando producto:', error);
+  }
+}
+
+
+    async function eliminarProducto(id) {
+      if (confirm('¿Seguro quieres eliminar este producto?')) {
+        try {
+          const respuesta = await fetch(`http://localhost:8090/api/collections/productos/records/${id}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (respuesta.ok) {
+            alert('Producto eliminado');
+            cargarProductos();
+          } else {
+            alert('Error al eliminar producto');
+          }
+        } catch (error) {
+          console.error('Error al eliminar producto:', error);
+        }
+      }
+    }
+
+    document.getElementById('formProducto').addEventListener('submit', agregarProducto);
+    document.getElementById('guardarBtn').addEventListener('click', guardarCambios);
+
+    cargarProductos();
+
+    // ---- Sistema de logout ----
+
+    function cerrarSesion() {
+      localStorage.removeItem('pocketbase_token');
+      localStorage.removeItem('pocketbase_user');
+      window.location.href = 'login.html';
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', cerrarSesion);
+
+    if (token) {
+      document.getElementById('mensajeSesion').textContent = 'admin';
+    }
+  </script>
+  <script>
+    const token = localStorage.getItem('pocketbase_token');
+    if (!token) {
+      window.location.href = 'login.html';
+    }
+  </script>
+  <script src="/js/timer.js">
+  </script>
+</body>
+</html>

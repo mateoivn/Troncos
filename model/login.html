@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <link rel="icon" type="image/jpg" href="/images/logotroncos.jpg"> 
+    <title>Acceder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        header {
+            background-color: #f38e30fb;
+            color: white;
+            text-align: left;
+            padding: 20px;
+            font-size: 24px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            padding: 20px;
+        }
+        .producto {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        footer {
+            text-align: center;
+            padding: 10px;
+            background: #8B5A2B;
+            color: white;
+            position: absolute;
+            width: 100%;
+            bottom: 0;
+        }
+        .login-container{
+            text-align: center;
+            align-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="index.html"><img src="/images/logotroncos.jpg" alt="logotroncos"></a>Troncos y Algo Más
+        <a href="https://www.instagram.com/troncosyalgomas/"><img type="image/png" src="/images/logoinstagram.png" alt="Instagram" height="100" width="100"></a>
+    </header>
+
+    
+  <h2>Iniciar Sesión</h2>
+
+  <form id="loginForm">
+    <input type="text" id="identity" placeholder="Email o Username" required><br><br>
+    <input type="password" id="password" placeholder="Contraseña" required><br><br>
+    <button type="submit">Entrar</button>
+  </form>
+
+  <p id="mensaje"></p>
+  
+  <script src="/js/token.js"></script>
+    <footer>
+        &copy; 2025 Troncos y Algo Más - Todos los derechos reservados
+    </footer>
+</body>
