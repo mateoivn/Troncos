@@ -1,6 +1,6 @@
 let productos = [];
 let paginaActual = 1;
-const productosPorPagina = 6;
+const productosPorPagina = 8;
 
 async function cargarProductos() {
   try {
@@ -31,7 +31,7 @@ function mostrarProductos() {
     if (producto.imagen) {
       urlImagen = `http://localhost:8090/api/files/productos/${producto.id}/${producto.imagen}`;
     } else {
-      urlImagen = '/images/logoinstagram.png'; // Imagen de respaldo
+      urlImagen = '/images/logoinstagram.png';
     }
 
     div.innerHTML = `
@@ -52,8 +52,8 @@ function mostrarPaginacion() {
     paginacion = document.createElement('div');
     paginacion.id = 'paginacion';
     paginacion.style.textAlign = 'center';
-    paginacion.style.margin = '20px';
-    document.body.insertBefore(paginacion, document.querySelector('footer'));
+    paginacion.style.margin = '20px 0';
+    document.body.appendChild(div);
   }
   paginacion.innerHTML = '';
 
